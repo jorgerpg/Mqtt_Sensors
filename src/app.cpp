@@ -6,10 +6,7 @@
 DHT11 dht11(DHT11_PIN);
 
 /**
- * @brief Constructor for the SmartMeter class.
- *
- * Initializes the SmartMeter object by setting up the ComManager and SensorManager components,
- * initializing member variables, and configuring task handles.
+ * @brief Constructor for the AppManager class.
  */
 AppManager::AppManager()
 {
