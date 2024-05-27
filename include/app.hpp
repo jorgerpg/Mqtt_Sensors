@@ -7,7 +7,7 @@
 enum {
     INITIALIZE,
     WATER_SENSOR_READ,
-    DHT_SENSOR_READ
+    DHT_SENSOR_READ,
 };
 
 class AppManager

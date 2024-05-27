@@ -20,7 +20,7 @@ AppManager::~AppManager() {}
 void AppManager::initialize()
 {
   read_dht_sensor_timer.start(1000);
-  read_water_sensor_timer.start(5000);
+  read_water_sensor_timer.start(2000);
 
   // Configuration of ADC1 (ADC unit 1)
   adc1_config_width(ADC_WIDTH_BIT_12); // 12-bit width (0-4095)
