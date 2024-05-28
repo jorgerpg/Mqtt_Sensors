@@ -1,9 +1,11 @@
 #include "app.hpp"
+#include "WifiManager.hpp"
 
 #define WATER_SENSOR_PIN ADC1_CHANNEL_6
 #define DHT11_PIN GPIO_NUM_26
 
 DHT11 dht11(DHT11_PIN);
+WIFI wifi; // Instância da classe WIFI
 
 /**
  * @brief Constructor for the AppManager class.
@@ -25,6 +27,9 @@ void AppManager::initialize()
   // Configuration of ADC1 (ADC unit 1)
   adc1_config_width(ADC_WIDTH_BIT_12); // 12-bit width (0-4095)
   adc1_config_channel_atten(WATER_SENSOR_PIN, ADC_ATTEN_DB_12);
+
+  // Inicializa WiFi
+  wifi.start();
 }
 
 void AppManager::application()
