@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include "driver/adc.h"
+#include "esp_adc/adc_oneshot.h"
+#include "hal/adc_types.h"
 #include "driver/gpio.h"
 #include "DHT11.h"
 #include "BASES.hpp"
@@ -19,9 +20,11 @@ public:
   void initialize();
   void application();
   void publish_mqtt_data();
+  void configure_adc();
 
   int m_temperature;
   int m_humidity;
+  uint8_t m_precipitacao;
 
   BASE read_dht_sensor_timer;
   BASE read_water_sensor_timer;

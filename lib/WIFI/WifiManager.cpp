@@ -10,14 +10,11 @@ const char* ntpServer = "pool.ntp.org";
 // Fuso horário (em segundos) - 3 horas para o Brasil (GMT -3)
 const long timezoneOffset = -3 * 3600;
 
-#define WIFI_SSID "SIM.DIGITAL 501"
-#define WIFI_PASS "Salvador"
-
-WIFI::WIFI() {
+WIFI::WIFI(const char* ssid, const char* password) : ssid(ssid), password(password) {
     // Constructor implementation (if needed)
 }
 
-void WIFI::init() {
+void WIFI::start() {
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -38,15 +35,17 @@ void WIFI::init_sntp() {
     ESP_LOGI(TAG, "Initializing SNTP");
 
     // Configura o servidor SNTP
-    sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, (char*)ntpServer);
+    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, (char*)ntpServer);
 
     // Inicia o SNTP
-    sntp_init();
-    
+    esp_sntp_init();
+
     // Aguarda a sincronização do tempo (até 10 segundos)
     time_t now = 0;
-    struct tm timeinfo = { 0 };
+    struct tm timeinfo;
+    memset(&timeinfo, 0, sizeof(struct tm));  // Zera toda a estrutura timeinfo
+
     int retry = 0;
     const int retry_count = 10;
     while (timeinfo.tm_year < (2020 - 1900) && ++retry < retry_count) {
@@ -100,8 +99,8 @@ void WIFI::wifi_init_sta() {
                                                         &instance_got_ip));
 
     wifi_config_t wifi_config = {};
-    strcpy((char *)wifi_config.sta.ssid, WIFI_SSID);
-    strcpy((char *)wifi_config.sta.password, WIFI_PASS);
+    strcpy((char *)wifi_config.sta.ssid, ssid);
+    strcpy((char *)wifi_config.sta.password, password);
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config.sta.pmf_cfg.capable = true;
     wifi_config.sta.pmf_cfg.required = false;
@@ -119,7 +118,7 @@ void WIFI::wifi_init_sta() {
                                            portMAX_DELAY);
 
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", WIFI_SSID, WIFI_PASS);
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ssid, password);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
@@ -131,6 +130,7 @@ void WIFI::ping_test(void* pvParameters) {
 
     esp_ping_handle_t ping;
     esp_ping_callbacks_t cbs = {
+        .cb_args = NULL,
         .on_ping_success = NULL,
         .on_ping_timeout = NULL,
         .on_ping_end = NULL,
@@ -141,8 +141,4 @@ void WIFI::ping_test(void* pvParameters) {
     while (1) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
-}
-
-void WIFI::start() {
-    init();
 }

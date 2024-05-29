@@ -1,13 +1,3 @@
-/**
- * DHT11.cpp
- * Library for reading temperature and humidity from the DHT11 sensor.
- *
- * Author: Dhruba Saha
- * Adapted for ESP-IDF by [Your Name]
- * Version: 2.1.0
- * License: MIT
- */
-
 #include "DHT11.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -16,17 +6,20 @@
 
 #define TAG "DHT11"
 
+// Constructor to initialize the DHT11 sensor with the specified pin
 DHT11::DHT11(gpio_num_t pin) : _pin(pin)
 {
     gpio_set_direction(_pin, GPIO_MODE_OUTPUT);
     gpio_set_level(_pin, 1);
 }
 
+// Set the delay between readings
 void DHT11::setDelay(uint32_t delay)
 {
     _delayMS = delay;
 }
 
+// Read the raw data from the sensor
 int DHT11::readRawData(uint8_t data[5])
 {
     vTaskDelay(pdMS_TO_TICKS(_delayMS));
@@ -69,6 +62,7 @@ int DHT11::readRawData(uint8_t data[5])
     return DHT11::ERROR_TIMEOUT;
 }
 
+// Read a single byte of data from the sensor
 uint8_t DHT11::readByte()
 {
     uint8_t value = 0;
@@ -88,6 +82,7 @@ uint8_t DHT11::readByte()
     return value;
 }
 
+// Send the start signal to the sensor
 void DHT11::startSignal()
 {
     gpio_set_direction(_pin, GPIO_MODE_OUTPUT);
@@ -98,6 +93,7 @@ void DHT11::startSignal()
     gpio_set_direction(_pin, GPIO_MODE_INPUT);
 }
 
+// Read the temperature from the sensor
 int DHT11::readTemperature()
 {
     uint8_t data[5];
@@ -109,6 +105,7 @@ int DHT11::readTemperature()
     return data[2];
 }
 
+// Read the humidity from the sensor
 int DHT11::readHumidity()
 {
     uint8_t data[5];
@@ -120,6 +117,7 @@ int DHT11::readHumidity()
     return data[0];
 }
 
+// Read both temperature and humidity from the sensor
 int DHT11::readTemperatureHumidity(int &temperature, int &humidity)
 {
     uint8_t data[5];
@@ -133,6 +131,7 @@ int DHT11::readTemperatureHumidity(int &temperature, int &humidity)
     return 0; // Indicate success
 }
 
+// Get a string representation of the error code
 const char* DHT11::getErrorString(int errorCode)
 {
     switch (errorCode)

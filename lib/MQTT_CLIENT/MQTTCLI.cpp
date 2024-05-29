@@ -1,32 +1,38 @@
-
 #include "MQTTCLI.hpp"
 #include "esp_log.h"
 
+// Define the logging tag for this module
 static const char *TAG = "MQTTClient";
 
-MQTTClient::MQTTClient() {
+// Constructor for the MQTTClient class, initializes the client with the given URI
+MQTTClient::MQTTClient(const char* uri) : uri(uri) {
 }
 
+// Start the MQTT client
 void MQTTClient::start() {
     mqtt_app_start();
 }
 
+// Publish a message to the specified topic
 void MQTTClient::publish(const char* topic, const char* data) {
     esp_mqtt_client_publish(client, topic, data, 0, 1, 0);
 }
 
+// Subscribe to the specified topic
 void MQTTClient::subscribe(const char* topic) {
     esp_mqtt_client_subscribe(client, topic, 0);
 }
 
+// Event handler for MQTT events
 void MQTTClient::mqtt_event_handler(void* handler_args, esp_event_base_t base, int32_t event_id, void* event_data) {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t) event_data;
     MQTTClient* mqttClient = (MQTTClient*) handler_args;
 
+    // Handle different types of MQTT events
     switch (event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            mqttClient->subscribe("/test/topic"); // Exemplo de tópico
+            mqttClient->subscribe("/test/topic"); // Example topic
             mqttClient->publish("/test/topic", "Hello MQTT");
             break;
         case MQTT_EVENT_DISCONNECTED:
@@ -55,11 +61,12 @@ void MQTTClient::mqtt_event_handler(void* handler_args, esp_event_base_t base, i
     }
 }
 
+// Initialize and start the MQTT client
 void MQTTClient::mqtt_app_start() {
-    esp_mqtt_client_config_t mqtt_cfg = {};
-    mqtt_cfg.broker.address.uri = "mqtt://192.168.18.13:1883";
+    esp_mqtt_client_config_t mqtt_cfg = {}; // Initialize the MQTT client configuration structure
+    mqtt_cfg.broker.address.uri = uri; // Set the broker URI
 
-    client = esp_mqtt_client_init(&mqtt_cfg);
-    esp_mqtt_client_register_event(client, MQTT_EVENT_ANY, mqtt_event_handler, this);
-    esp_mqtt_client_start(client);
+    client = esp_mqtt_client_init(&mqtt_cfg); // Initialize the MQTT client
+    esp_mqtt_client_register_event(client, MQTT_EVENT_ANY, mqtt_event_handler, this); // Register the event handler
+    esp_mqtt_client_start(client); // Start the MQTT client
 }

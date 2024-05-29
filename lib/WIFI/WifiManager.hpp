@@ -15,11 +15,12 @@
 
 class WIFI {
 public:
-    WIFI();
-    void init();
+    WIFI(const char* ssid, const char* password);
     void start();
 
 private:
+    const char* ssid;
+    const char* password;
     static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     void wifi_init_sta();
     static void ping_test(void* pvParameters);
