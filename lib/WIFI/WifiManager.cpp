@@ -1,11 +1,17 @@
 #include "WifiManager.hpp"
+#include <esp_sntp.h>
 
 const char *WIFI::TAG = "wifi_pinger";
 const int WIFI::WIFI_CONNECTED_BIT = BIT0;
 EventGroupHandle_t WIFI::s_wifi_event_group = nullptr;
 
-#define WIFI_SSID "Vrumvrum"
-#define WIFI_PASS "jayjayojatinho"
+const char* ntpServer = "pool.ntp.org";
+
+// Fuso horário (em segundos) - 3 horas para o Brasil (GMT -3)
+const long timezoneOffset = -3 * 3600;
+
+#define WIFI_SSID "SIM.DIGITAL 501"
+#define WIFI_PASS "Salvador"
 
 WIFI::WIFI() {
     // Constructor implementation (if needed)
@@ -24,6 +30,38 @@ void WIFI::init() {
     wifi_init_sta();
 
     xTaskCreate(&ping_test, "ping_test", 4096, NULL, 5, NULL);
+
+    init_sntp();
+}
+
+void WIFI::init_sntp() {
+    ESP_LOGI(TAG, "Initializing SNTP");
+
+    // Configura o servidor SNTP
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, (char*)ntpServer);
+
+    // Inicia o SNTP
+    sntp_init();
+    
+    // Aguarda a sincronização do tempo (até 10 segundos)
+    time_t now = 0;
+    struct tm timeinfo = { 0 };
+    int retry = 0;
+    const int retry_count = 10;
+    while (timeinfo.tm_year < (2020 - 1900) && ++retry < retry_count) {
+        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        time(&now);
+        localtime_r(&now, &timeinfo);
+    }
+
+    // Aplica o offset de fuso horário
+    now += timezoneOffset;
+    localtime_r(&now, &timeinfo);
+
+    // Exibe a hora atualizada
+    ESP_LOGI(TAG, "Current time: %s", asctime(&timeinfo));
 }
 
 void WIFI::event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {

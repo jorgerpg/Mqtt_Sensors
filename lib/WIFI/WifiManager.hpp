@@ -23,6 +23,7 @@ private:
     static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     void wifi_init_sta();
     static void ping_test(void* pvParameters);
+    void init_sntp();
 
     static EventGroupHandle_t s_wifi_event_group;
     static const char *TAG;
