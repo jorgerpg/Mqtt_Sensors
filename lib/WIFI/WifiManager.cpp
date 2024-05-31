@@ -1,7 +1,7 @@
 #include "WifiManager.hpp"
 #include <esp_sntp.h>
 
-const char *WIFI::TAG = "wifi_pinger";
+const char *WIFI::TAG = "wifi";
 const int WIFI::WIFI_CONNECTED_BIT = BIT0;
 EventGroupHandle_t WIFI::s_wifi_event_group = nullptr;
 
@@ -25,8 +25,6 @@ void WIFI::start() {
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
-
-    xTaskCreate(&ping_test, "ping_test", 4096, NULL, 5, NULL);
 
     init_sntp();
 }
@@ -121,24 +119,5 @@ void WIFI::wifi_init_sta() {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ssid, password);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
-    }
-}
-
-void WIFI::ping_test(void* pvParameters) {
-    esp_ping_config_t ping_config = ESP_PING_DEFAULT_CONFIG();
-    ping_config.target_addr.u_addr.ip4.addr = inet_addr("8.8.8.8"); // Google's DNS
-
-    esp_ping_handle_t ping;
-    esp_ping_callbacks_t cbs = {
-        .cb_args = NULL,
-        .on_ping_success = NULL,
-        .on_ping_timeout = NULL,
-        .on_ping_end = NULL,
-    };
-    esp_ping_new_session(&ping_config, &cbs, &ping);
-    esp_ping_start(ping);
-
-    while (1) {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }

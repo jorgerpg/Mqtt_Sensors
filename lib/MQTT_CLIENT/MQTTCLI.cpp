@@ -10,7 +10,12 @@ MQTTClient::MQTTClient(const char* uri) : uri(uri) {
 
 // Start the MQTT client
 void MQTTClient::start() {
-    mqtt_app_start();
+    esp_mqtt_client_config_t mqtt_cfg = {}; // Initialize the MQTT client configuration structure
+    mqtt_cfg.broker.address.uri = uri; // Set the broker URI
+
+    client = esp_mqtt_client_init(&mqtt_cfg); // Initialize the MQTT client
+    esp_mqtt_client_register_event(client, MQTT_EVENT_ANY, mqtt_event_handler, this); // Register the event handler
+    esp_mqtt_client_start(client); // Start the MQTT client
 }
 
 // Publish a message to the specified topic
@@ -59,14 +64,4 @@ void MQTTClient::mqtt_event_handler(void* handler_args, esp_event_base_t base, i
             ESP_LOGI(TAG, "Other event id:%d", event->event_id);
             break;
     }
-}
-
-// Initialize and start the MQTT client
-void MQTTClient::mqtt_app_start() {
-    esp_mqtt_client_config_t mqtt_cfg = {}; // Initialize the MQTT client configuration structure
-    mqtt_cfg.broker.address.uri = uri; // Set the broker URI
-
-    client = esp_mqtt_client_init(&mqtt_cfg); // Initialize the MQTT client
-    esp_mqtt_client_register_event(client, MQTT_EVENT_ANY, mqtt_event_handler, this); // Register the event handler
-    esp_mqtt_client_start(client); // Start the MQTT client
 }

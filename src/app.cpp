@@ -1,3 +1,4 @@
+// mosquitto -v -c testconfig.txt / ativar mosquitto com o ip da maquina
 #include "app.hpp"
 #include "WifiManager.hpp"
 #include "MQTTCLI.hpp"
@@ -11,8 +12,8 @@
 
 // Create instances of DHT11 sensor, WiFi manager, and MQTT client
 DHT11 dht11(DHT11_PIN);
-WIFI wifi("SIM.DIGITAL 501", "Salvador"); // WiFi SSID and password
-MQTTClient mqttClient("mqtt://192.168.18.13:1883"); // MQTT broker URI
+WIFI wifi("Vrumvrum", "jayjayojatinho"); // WiFi SSID and password
+MQTTClient mqttClient("mqtt://192.168.220.237:1883"); // MQTT broker URI
 
 // Timezone offset in seconds (3 hours for Brazil, GMT -3)
 const long timezoneOffset = -3 * 3600;
@@ -35,8 +36,8 @@ AppManager::~AppManager() {}
  */
 void AppManager::initialize() {
     // Start timers for sensors and MQTT publish
-    read_dht_sensor_timer.start(1000);
-    read_water_sensor_timer.start(2000);
+    read_dht_sensor_timer.start(5000);
+    read_water_sensor_timer.start(8000);
     mqtt_publish_timer.start(10000);
 
     // Configure ADC one-shot driver

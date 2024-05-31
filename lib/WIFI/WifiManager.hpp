@@ -11,7 +11,6 @@
 #include "esp_log.h"
 #include "lwip/err.h"
 #include "lwip/sockets.h"
-#include "ping/ping_sock.h"
 
 class WIFI {
 public:
@@ -23,7 +22,6 @@ private:
     const char* password;
     static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     void wifi_init_sta();
-    static void ping_test(void* pvParameters);
     void init_sntp();
 
     static EventGroupHandle_t s_wifi_event_group;
