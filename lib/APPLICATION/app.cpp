@@ -11,7 +11,7 @@
 #define DHT11_PIN GPIO_NUM_26
 
 // Create instances of DHT11 sensor, WiFi manager, and MQTT client
-DHT11 dht11(DHT11_PIN);
+// DHT11 dht11(DHT11_PIN);
 WIFI wifi("Vrumvrum", "jayjayojatinho"); // WiFi SSID and password
 MQTTClient mqttClient("mqtt://192.168.220.237:1883"); // MQTT broker URI
 
@@ -42,6 +42,8 @@ void AppManager::initialize() {
 
     // Configure ADC one-shot driver
     configure_adc();
+
+    DHT11_init(GPIO_NUM_26);
 
     // Start WiFi and MQTT services
     wifi.start();
@@ -77,12 +79,14 @@ void AppManager::application() {
 
         case DHT_SENSOR_READ:
             if (read_dht_sensor_timer.get()) {
-                int result = dht11.readTemperatureHumidity(m_temperature, m_humidity);
-                if (result == 0) {
-                    ESP_LOGI(TAG, "Temperature: %d°C, Humidity: %d%%", m_temperature, m_humidity);
-                } else {
-                    ESP_LOGE(TAG, "Failed to read from DHT11 sensor: %s", dht11.getErrorString(result));
+                dht11_reading result = DHT11_read();
+                if(result.temperature >= 0 && result.humidity >= 20)
+                {
+                    m_temperature = result.temperature;
+                    m_humidity = result.humidity;
                 }
+                ESP_LOGI(TAG, "Temperature: %d°C, Humidity: %d%%", m_temperature, m_humidity);
+
                 read_dht_sensor_timer.restart();
             }
             currentState = MQTT_PUBLISH_DATA;

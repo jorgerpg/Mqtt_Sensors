@@ -1,146 +1,126 @@
-#include "DHT11.h"
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2018 Michele Biondi
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+*/
+
+#include "esp_timer.h"
+#include "driver/gpio.h"
+#include "rom/ets_sys.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_timer.h"
-#include "esp_rom_sys.h"
 
-#define TAG "DHT11"
+#include "dht11.h"
 
-// Constructor to initialize the DHT11 sensor with the specified pin
-DHT11::DHT11(gpio_num_t pin) : _pin(pin)
-{
-    gpio_set_direction(_pin, GPIO_MODE_OUTPUT);
-    gpio_set_level(_pin, 1);
+static gpio_num_t dht_gpio;
+static int64_t last_read_time = -2000000;
+static struct dht11_reading last_read;
+
+static int _waitOrTimeout(uint16_t microSeconds, int level) {
+    int micros_ticks = 0;
+    while(gpio_get_level(dht_gpio) == level) { 
+        if(micros_ticks++ > microSeconds) 
+            return DHT11_TIMEOUT_ERROR;
+        ets_delay_us(1);
+    }
+    return micros_ticks;
 }
 
-// Set the delay between readings
-void DHT11::setDelay(uint32_t delay)
-{
-    _delayMS = delay;
+static int _checkCRC(uint8_t data[]) {
+    if(data[4] == (data[0] + data[1] + data[2] + data[3]))
+        return DHT11_OK;
+    else
+        return DHT11_CRC_ERROR;
 }
 
-// Read the raw data from the sensor
-int DHT11::readRawData(uint8_t data[5])
-{
-    vTaskDelay(pdMS_TO_TICKS(_delayMS));
-    startSignal();
-    uint64_t timeout_start = esp_timer_get_time();
+static void _sendStartSignal() {
+    gpio_set_direction(dht_gpio, GPIO_MODE_OUTPUT);
+    gpio_set_level(dht_gpio, 0);
+    ets_delay_us(20 * 1000);
+    gpio_set_level(dht_gpio, 1);
+    ets_delay_us(40);
+    gpio_set_direction(dht_gpio, GPIO_MODE_INPUT);
+}
 
-    while (gpio_get_level(_pin) == 1)
-    {
-        if ((esp_timer_get_time() - timeout_start) > TIMEOUT_DURATION * 1000)
-        {
-            return DHT11::ERROR_TIMEOUT;
+static int _checkResponse() {
+    /* Wait for next step ~80us*/
+    if(_waitOrTimeout(80, 0) == DHT11_TIMEOUT_ERROR)
+        return DHT11_TIMEOUT_ERROR;
+
+    /* Wait for next step ~80us*/
+    if(_waitOrTimeout(80, 1) == DHT11_TIMEOUT_ERROR) 
+        return DHT11_TIMEOUT_ERROR;
+
+    return DHT11_OK;
+}
+
+static struct dht11_reading _timeoutError() {
+    struct dht11_reading timeoutError = {DHT11_TIMEOUT_ERROR, -1, -1};
+    return timeoutError;
+}
+
+static struct dht11_reading _crcError() {
+    struct dht11_reading crcError = {DHT11_CRC_ERROR, -1, -1};
+    return crcError;
+}
+
+void DHT11_init(gpio_num_t gpio_num) {
+    /* Wait 1 seconds to make the device pass its initial unstable status */
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    dht_gpio = gpio_num;
+}
+
+struct dht11_reading DHT11_read() {
+    /* Tried to sense too son since last read (dht11 needs ~2 seconds to make a new read) */
+    if(esp_timer_get_time() - 2000000 < last_read_time) {
+        return last_read;
+    }
+
+    last_read_time = esp_timer_get_time();
+
+    uint8_t data[5] = {0,0,0,0,0};
+
+    _sendStartSignal();
+
+    if(_checkResponse() == DHT11_TIMEOUT_ERROR)
+        return last_read = _timeoutError();
+    
+    /* Read response */
+    for(int i = 0; i < 40; i++) {
+        /* Initial data */
+        if(_waitOrTimeout(50, 0) == DHT11_TIMEOUT_ERROR)
+            return last_read = _timeoutError();
+                
+        if(_waitOrTimeout(70, 1) > 28) {
+            /* Bit received was a 1 */
+            data[i/8] |= (1 << (7-(i%8)));
         }
     }
 
-    if (gpio_get_level(_pin) == 0)
-    {
-        esp_rom_delay_us(80);
-        if (gpio_get_level(_pin) == 1)
-        {
-            esp_rom_delay_us(80);
-            for (int i = 0; i < 5; i++)
-            {
-                data[i] = readByte();
-                if (data[i] == DHT11::ERROR_TIMEOUT)
-                {
-                    return DHT11::ERROR_TIMEOUT;
-                }
-            }
-
-            if (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF))
-            {
-                return 0; // Success
-            }
-            else
-            {
-                return DHT11::ERROR_CHECKSUM;
-            }
-        }
-    }
-    return DHT11::ERROR_TIMEOUT;
-}
-
-// Read a single byte of data from the sensor
-uint8_t DHT11::readByte()
-{
-    uint8_t value = 0;
-
-    for (int i = 0; i < 8; i++)
-    {
-        while (gpio_get_level(_pin) == 0)
-            ;
-        esp_rom_delay_us(30);
-        if (gpio_get_level(_pin) == 1)
-        {
-            value |= (1 << (7 - i));
-        }
-        while (gpio_get_level(_pin) == 1)
-            ;
-    }
-    return value;
-}
-
-// Send the start signal to the sensor
-void DHT11::startSignal()
-{
-    gpio_set_direction(_pin, GPIO_MODE_OUTPUT);
-    gpio_set_level(_pin, 0);
-    vTaskDelay(pdMS_TO_TICKS(18));
-    gpio_set_level(_pin, 1);
-    esp_rom_delay_us(40);
-    gpio_set_direction(_pin, GPIO_MODE_INPUT);
-}
-
-// Read the temperature from the sensor
-int DHT11::readTemperature()
-{
-    uint8_t data[5];
-    int error = readRawData(data);
-    if (error != 0)
-    {
-        return error;
-    }
-    return data[2];
-}
-
-// Read the humidity from the sensor
-int DHT11::readHumidity()
-{
-    uint8_t data[5];
-    int error = readRawData(data);
-    if (error != 0)
-    {
-        return error;
-    }
-    return data[0];
-}
-
-// Read both temperature and humidity from the sensor
-int DHT11::readTemperatureHumidity(int &temperature, int &humidity)
-{
-    uint8_t data[5];
-    int error = readRawData(data);
-    if (error != 0)
-    {
-        return error;
-    }
-    humidity = data[0];
-    temperature = data[2];
-    return 0; // Indicate success
-}
-
-// Get a string representation of the error code
-const char* DHT11::getErrorString(int errorCode)
-{
-    switch (errorCode)
-    {
-    case DHT11::ERROR_TIMEOUT:
-        return "Error 253: Reading from DHT11 timed out.";
-    case DHT11::ERROR_CHECKSUM:
-        return "Error 254: Checksum mismatch while reading from DHT11.";
-    default:
-        return "Unknown error.";
+    if(_checkCRC(data) != DHT11_CRC_ERROR) {
+        last_read.status = DHT11_OK;
+        last_read.temperature = data[2];
+        last_read.humidity = data[0];
+        return last_read;
+    } else {
+        return last_read = _crcError();
     }
 }
