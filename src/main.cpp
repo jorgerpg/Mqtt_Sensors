@@ -7,7 +7,7 @@ void AppManagerTask(void *pvParameters) {
     AppManager appManager;
     while (true) {
         appManager.application();
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay de 1 segundo
+        vTaskDelay(pdMS_TO_TICKS(100)); // Delay de 1 segundo
     }
 }
 

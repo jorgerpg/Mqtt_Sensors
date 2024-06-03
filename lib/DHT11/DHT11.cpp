@@ -90,9 +90,9 @@ void DHT11_init(gpio_num_t gpio_num) {
 
 struct dht11_reading DHT11_read() {
     /* Tried to sense too son since last read (dht11 needs ~2 seconds to make a new read) */
-    if(esp_timer_get_time() - 2000000 < last_read_time) {
-        return last_read;
-    }
+    // if(esp_timer_get_time() - 2000000 < last_read_time) {
+    //     return last_read;
+    // }
 
     last_read_time = esp_timer_get_time();
 
