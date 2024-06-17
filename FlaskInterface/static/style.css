@@ -1,0 +1,147 @@
+  body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: #131315;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ConectionStatus {
+    width: 134px;
+    height: 29px;
+    margin-right: 0%;
+    position: relative;
+  }
+
+  .Conected {
+    position: absolute;
+    color: white;
+    font-size: 24px;
+    font-family: Inter;
+    font-weight: 400;
+    word-wrap: break-word;
+    left: 12%;
+  }
+
+  .Ellipse1 {
+    width: 18px;
+    height: 18px;
+    position: absolute;
+    background: #2DC108;
+    border-radius: 9999px;
+    right: 10px;
+    top: 5px;
+  }
+
+  .Center {
+    width: 234px;
+    height: 235px;
+    margin: 0% 5% 0% 10%;
+    position: relative;
+  }
+
+  .Location {
+    position: absolute;
+    color: white;
+    font-size: 48px;
+    font-family: Inter;
+    font-weight: 400;
+    word-wrap: break-word;
+    top: 177px;
+    left: 5px;
+  }
+
+  .Temperature {
+    width: 234px;
+    height: 206px;
+    position: absolute;
+  }
+
+  .Temperature div {
+    position: absolute;
+    color: white;
+    font-size: 170px;
+    font-family: Inter;
+    font-weight: 400;
+    word-wrap: break-word;
+  }
+
+  .Temperature .C {
+    position: absolute;
+    color: white;
+    font-size: 32px;
+    font-family: Inter;
+    font-weight: 400;
+    word-wrap: break-word;
+    top: 39px;
+    left: 160px;
+  }
+
+  .InfosDiv {
+    width: 90%;
+    height: 60%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5%;
+    padding: 10px;
+    position: relative;
+    background: transparent;
+  }
+
+  .Rectangle1 {
+    width: 100%;
+    height: 100%;
+    opacity: 0.80;
+    background: rgba(137.26, 125.25, 125.25, 0.10);
+    border-top-left-radius: 46px;
+    border-top-right-radius: 46px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .Rectangle1 .element {
+    flex: 1 1 30%;
+    max-width: 30%;
+    height: 100px;
+    margin: 10px;
+    color: white;
+    font-family: Inter;
+    font-weight: 400;
+    word-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  .Rectangle1 .element div {
+    position: relative;
+  }
+
+  .Rectangle1 .element .title {
+    font-size: 20px;
+  }
+
+  .Rectangle1 .element .value {
+    font-size: 60px;
+  }
+
+  .Weather {
+    width: 100%;
+    height: 40%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+  }

@@ -10,10 +10,8 @@
 #define WATER_SENSOR_PIN ADC_CHANNEL_6
 #define DHT11_PIN GPIO_NUM_26
 
-// Create instances of DHT11 sensor, WiFi manager, and MQTT client
-// DHT11 dht11(DHT11_PIN);
 WIFI wifi("Vrumvrum", "jayjayojatinho"); // WiFi SSID and password
-MQTTClient mqttClient("mqtt://192.168.220.237:1883"); // MQTT broker URI
+MQTTClient mqttClient("mqtt://test.mosquitto.org:1883"); // MQTT broker URI
 
 // Timezone offset in seconds (3 hours for Brazil, GMT -3)
 const long timezoneOffset = -3 * 3600;

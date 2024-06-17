@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="Desktop1">
+  <div style="width: 100%; height: 40%; display: flex; flex-direction: row; justify-content: center; align-items: center; margin: 10%;">
+    <div class="Weather" style="width: 150px;">
+      <img class="Sun" style="width: 150px; height: 150px;" src="{{ url_for('static', filename=weather_data['weather_code']) }}" />
+    </div>
+    <div class="Center">
+      <div class="Location">{{city}}</div>
+      <div class="Temperature">
+        <div>{{weather_info["temperture"]}}</div>
+        <div class="C">°C</div>
+      </div>
+    </div>
+    <div class="ConectionStatus">
+      <div class="Conected">{{connection}}</div>
+      <div class="Ellipse1"></div>
+    </div>
+  </div>
+  <div class="InfosDiv">
+    <div class="Rectangle1">
+      <div class="Min element">
+        <div class="title">Minima:</div>
+        <div style="display: flex; flex-direction: row; align-items: flex-start;">
+          <div class="value">{{weather_data["temperature_min"]}}</div>
+          <div class="C" style="font-size: 20px;">°C</div>
+        </div>
+      </div>
+      <div class="Humidity element">
+        <div class="title">Umidade:</div>
+        <div style="display: flex; flex-direction: row; align-items: flex-start;">
+          <div class="value">{{weather_info["humidity"]}}</div>
+          <div style="font-size: 20px;">%</div>
+        </div>
+      </div>
+      <div class="Sunrise element">
+        <div class="title">Nascer do Sol:</div>
+        <div class="value">{{weather_data["sunrise"]}}</div>
+      </div>
+      <div class="Max element">
+        <div class="title">Máxima:</div>
+        <div style="display: flex; flex-direction: row; align-items: flex-start;">
+          <div class="value">{{weather_data["temperature_max"]}}</div>
+          <div class="C" style="font-size: 20px;">°C</div>
+        </div>
+      </div>
+      <div class="Rain element">
+        <div class="title">Chovendo?</div>
+        <div class="value">{{weather_info["precipitation"]}}</div>
+      </div>
+      <div class="Sunset element">
+        <div class="title">Pôr do Sol:</div>
+        <div class="value">{{weather_data["sunset"]}}</div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
