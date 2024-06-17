@@ -5,6 +5,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    // Função para atualizar os dados da página a cada 7 segundos
+    function updateData() {
+      $.ajax({
+        url: '/update_weather_data',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          $('.Temperature div:first').text(data.temperature);
+          $('.Humidity .value').text(data.humidity);
+          $('.Rain .value').text(data.precipitation);
+          $('.LastUpdated').text('Última atualização: ' + data.timestamp);
+        },
+        error: function(xhr, status, error) {
+          console.error('Erro ao atualizar dados:', error);
+        }
+      });
+    }
+
+    $(document).ready(function() {
+      // Chama a função updateData a cada 7 segundos
+      setInterval(updateData, 7000); // 7 segundos
+    });
+  </script>
 </head>
 
 <body class="Desktop1">
@@ -15,12 +40,12 @@
     <div class="Center">
       <div class="Location">{{city}}</div>
       <div class="Temperature">
-        <div>{{weather_info["temperture"]}}</div>
+        <div>{{ weather_info["temperature"] }}</div>
         <div class="C">°C</div>
       </div>
     </div>
     <div class="ConectionStatus">
-      <div class="Conected">{{connection}}</div>
+      <div class="Conected">{{ connection }}</div>
       <div class="Ellipse1"></div>
     </div>
   </div>
@@ -36,7 +61,7 @@
       <div class="Humidity element">
         <div class="title">Umidade:</div>
         <div style="display: flex; flex-direction: row; align-items: flex-start;">
-          <div class="value">{{weather_info["humidity"]}}</div>
+          <div class="value">{{ weather_info["humidity"] }}</div>
           <div style="font-size: 20px;">%</div>
         </div>
       </div>
@@ -53,7 +78,7 @@
       </div>
       <div class="Rain element">
         <div class="title">Chovendo?</div>
-        <div class="value">{{weather_info["precipitation"]}}</div>
+        <div class="value">{{ weather_info["precipitation"] }}</div>
       </div>
       <div class="Sunset element">
         <div class="title">Pôr do Sol:</div>
@@ -61,6 +86,17 @@
       </div>
     </div>
   </div>
+
+  <!-- Novos elementos para mostrar o ID e o horário da última atualização -->
+  <div class="ID">
+    ID ESP: {{ weather_info["id"] }}
+  </div>
+  <div class="LastUpdated">
+    Última atualização: {{ weather_info["timestamp"] }}
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 
 </html>

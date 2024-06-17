@@ -3,45 +3,61 @@ import threading
 import MQTTInfo
 import json
 import API
-
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 
 app = Flask(__name__)
 
-weatherInfo = MQTTInfo.MQQTInfo(None, None, None, None)
+weatherInfo = MQTTInfo.MQTTInfo(None, None, None, None, None)
 connectionStatus = 'Desconectado'
 
 def on_connect(client, userdata, flags, rc):
-  
-    # O subscribe fica no on_connect pois, caso perca a conexão ele a renova
-    # Lembrando que quando usado o #, você está falando que tudo que chegar após a barra do topico, será recebido
+    global connection_status
+    if rc == 0:
+        connection_status = 'Conectado'
+    else:
+        connection_status = 'Desconectado'
+    print(f"Connected with result code {rc}")
     client.subscribe("/sensor/data")
-    
+
 def on_message(client, userdata, msg):
     print(msg.topic + " - " + str(msg.payload))
 
     try:
         data = json.loads(msg.payload.decode())
-        weatherInfo.set_timeStamp = data.get("timestamp")
-        weatherInfo.set_temperture = data.get("temperture")
-        weatherInfo.set_humidity = data.get("humidity")
-        weatherInfo.set_precipitation = data.get("precipitation")
+        payload = data.get("payload", {})
+        weatherInfo.set_id(data.get("id"))
+        weatherInfo.set_timeStamp(data.get("timestamp"))
+        weatherInfo.set_temperature(payload.get("temperature"))
+        weatherInfo.set_humidity(payload.get("humidity"))
+        weatherInfo.set_precipitation(payload.get("precipitation"))
+
+        print("Updated weatherInfo:")
+        print(f"ID: {weatherInfo.id}")
+        print(f"Timestamp: {weatherInfo.timestamp}")
+        print(f"Temperature: {weatherInfo.temperature}")
+        print(f"Humidity: {weatherInfo.humidity}")
+        print(f"Precipitation: {weatherInfo.precipitation}")
 
     except Exception as e:
-        print('Error to get MQQT menssage ' + e)
+        print('Error to get MQTT message: ' + str(e))
+
+@app.route('/update_weather_data')
+def update_weather_data():
+
+    return jsonify({
+        'timestamp': weatherInfo.timestamp,
+        'temperature': weatherInfo.temperature,
+        'humidity': weatherInfo.humidity,
+        'precipitation': weatherInfo.precipitation
+    })
 
 def start_MQTT():
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
 
-    # Seta um usuário e senha para o Broker, se não tem, não use esta linha
-    # client.username_pw_set("USUARIO", password="SENHA")
-
-    # Conecta no MQTT Broker, no meu caso, o Mosquitto
     client.connect("test.mosquitto.org")
 
-    # Inicia o loop
     client.loop_forever()
 
 @app.route('/')
@@ -51,12 +67,8 @@ def index():
     return render_template('index.html', city=locationInfo["city"], connection=connectionStatus, weather_data=weatherData, weather_info=weatherInfo)
 
 if __name__ == "__main__":
-    # Iniciar o cliente MQTT em uma thread separada
     threading.Thread(target=start_MQTT).start()
-    # Definir host e port
     host = '127.0.0.1'
     port = 5000
-    # Imprimir mensagem de inicialização
     print(f" * Running on http://{host}:{port}/ (Press CTRL+C to quit)")
-    # Iniciar o servidor Flask
     app.run(host=host, port=port, debug=True)

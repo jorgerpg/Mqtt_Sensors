@@ -1,4 +1,5 @@
 import requests
+import logging
 
 weather_code_transcription = {
     "0": ['Moon.png', 'Sun.png'],
@@ -26,8 +27,14 @@ weather_code_transcription = {
 }
 
 def get_ip():
-    response = requests.get('https://api64.ipify.org?format=json').json()
-    return response["ip"]
+    try:
+        response = requests.get('https://api64.ipify.org?format=json')
+        response.raise_for_status()  # Lança uma exceção para códigos de status HTTP diferentes de 200
+        ip_address = response.json()['ip']
+        return ip_address
+    except requests.exceptions.RequestException as e:
+        logging.error(f'Error fetching IP address: {e}')
+        return 'Indisponível'  # Pode retornar qualquer valor padrão ou mensagem de erro que faça sentido para sua aplicação
 
 
 def get_location():
