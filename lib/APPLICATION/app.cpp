@@ -37,8 +37,8 @@ AppManager::~AppManager() {}
 void AppManager::initialize() {
     // Start timers for sensors and MQTT publish
     read_dht_sensor_timer.start(2000);
-    read_water_sensor_timer.start(9000);
-    mqtt_publish_timer.start(10000);
+    read_water_sensor_timer.start(5000);
+    mqtt_publish_timer.start(7000);
 
     // Configure ADC one-shot driver
     configure_adc();
